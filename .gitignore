@@ -1,3 +1,5 @@
 /frontend/dist
 /frontend/node_modules
 /backend/pb_data
+/backend/pocketbase.exe
+/backend/pocketbase
