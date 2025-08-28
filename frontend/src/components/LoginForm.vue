@@ -1,10 +1,13 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
+
+const router = useRouter()
 
 function validate() {
   if (!email.value) return 'Email é obrigatório.'
@@ -19,14 +22,31 @@ async function submit(e) {
   if (v) { error.value = v; return }
 
   loading.value = true
-  // Simulação mínima — aqui você integraria com PocketBase ou sua API
-  await new Promise(r => setTimeout(r, 700))
-  loading.value = false
+  try {
+    const res = await fetch('/api/collections/users/auth-with-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity: email.value, password: password.value })
+    })
 
-  // Para demo, apenas limpa e mostra console
-  console.log('Login', { email: email.value, password: password.value })
-  email.value = ''
-  password.value = ''
+    const data = await res.json()
+    if (!res.ok) {
+      error.value = data?.message || data?.error || 'Erro ao autenticar.'
+      return
+    }
+
+    if (data?.token) localStorage.setItem('pb_token', data.token)
+    if (data?.record) localStorage.setItem('pb_user', JSON.stringify(data.record))
+
+    email.value = ''
+    password.value = ''
+    router.push('/')
+  } catch (err) {
+    console.error('Login error:', err)
+    error.value = 'Erro de rede. Tente novamente.'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -41,12 +61,12 @@ async function submit(e) {
       <form @submit="submit" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-          <input v-model="email" type="email" autocomplete="email" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" value="usuario@teste.com.br"/>
+          <input value="usuario@teste.com.br" v-model="email" type="email" autocomplete="email" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="usuario@teste.com.br" />
         </div>
 
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
-          <input v-model="password" type="password" autocomplete="current-password" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" value="user1234"/>
+          <input value="user1234" v-model="password" type="password" autocomplete="current-password" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="user1234" />
         </div>
 
         <div>
