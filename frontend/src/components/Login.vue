@@ -1,0 +1,69 @@
+<script setup>
+import { ref } from 'vue'
+
+const email = ref('')
+const password = ref('')
+const error = ref('')
+const loading = ref(false)
+
+function validate() {
+  if (!email.value) return 'Email é obrigatório.'
+  if (!password.value) return 'Senha é obrigatória.'
+  return ''
+}
+
+async function submit(e) {
+  e.preventDefault()
+  error.value = ''
+  const v = validate()
+  if (v) { error.value = v; return }
+
+  loading.value = true
+  // Simulação mínima — aqui você integraria com PocketBase ou sua API
+  await new Promise(r => setTimeout(r, 700))
+  loading.value = false
+
+  // Para demo, apenas limpa e mostra console
+  console.log('Login', { email: email.value, password: password.value })
+  email.value = ''
+  password.value = ''
+}
+</script>
+
+<template>
+  <div class="min-h-screen flex items-center justify-center px-6">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/50 p-8">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-slate-800">Login</h2>
+        <p class="text-sm text-slate-500 mt-1">email: usuario@teste.com.br | senha:user1234</p>
+      </div>
+
+      <form @submit="submit" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+          <input v-model="email" type="email" autocomplete="email" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" value="usuario@teste.com.br"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
+          <input v-model="password" type="password" autocomplete="current-password" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" value="user1234"/>
+        </div>
+
+        <div>
+          <button :disabled="loading" class="w-full py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-60">
+            <span v-if="!loading">Entrar</span>
+            <span v-else>Entrando...</span>
+          </button>
+        </div>
+
+        <p v-if="error" class="text-center text-sm text-red-600">{{ error }}</p>
+
+      </form>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Pequenos ajustes para combinar com o estilo fornecido */
+.gradient-bg { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+</style>
