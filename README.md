@@ -45,8 +45,9 @@ docker run -p 8090:8090 \
 ```
 
 A aplicação estará disponível em:
-- Frontend: http://localhost:8090/app/
-- API e Admin UI do PocketBase: http://localhost:8090/
+- Landing page: http://localhost:8090/
+- App Vue: http://localhost:8090/app/
+- API e Admin UI do PocketBase: http://localhost:8090/_/
 
 ### Notas importantes
 
