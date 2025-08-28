@@ -65,11 +65,8 @@ COPY ./backend/pb_hooks/ ${PB_WORKDIR}/pb_hooks/
 
 COPY ./backend/pb_migrations/ ${PB_WORKDIR}/pb_migrations/
 
-# Copie o script de inicialização
-COPY ./backend/entrypoint.sh ${PB_HOME}/entrypoint.sh
-RUN chmod +x ${PB_HOME}/entrypoint.sh
-
 USER ${USER}
 WORKDIR "${PB_WORKDIR}"
 
-CMD ["sh", "-c", "${PB_HOME}/entrypoint.sh"]
+# Comando para iniciar o PocketBase.
+CMD ["pocketbase", "serve", "--http=0.0.0.0:8090"]
