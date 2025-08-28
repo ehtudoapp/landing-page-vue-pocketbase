@@ -7,30 +7,34 @@
       <aside class="hidden md:block w-64 bg-white border-r border-slate-200/50 p-4">
         <div class="space-y-4">
           <div class="flex flex-col gap-2">
-            <button class="px-3 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 text-sm font-medium" @click="onUploadClick">
-              + upload fotos
-            </button>
-            <button class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium" @click="onCreateAlbum">
+            <button class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+              @click="onCreateAlbum">
               + álbum
+            </button>
+            <button class="px-3 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 text-sm font-medium"
+              @click="onUploadClick">
+              + upload fotos
             </button>
             <input type="file" ref="fileInput" class="hidden" multiple @change="handleFiles" accept="image/*" />
           </div>
 
           <nav class="pt-2 border-t border-slate-100">
-            <a href="#/" class="block px-3 py-2 rounded hover:bg-slate-50 text-sm" @click.prevent="selectAllPhotos">Todas as fotos</a>
+            <a href="#/" class="block px-3 py-2 rounded hover:bg-slate-50 text-sm"
+              @click.prevent="selectAllPhotos">Todas as fotos</a>
 
             <div class="mt-3">
               <h4 class="text-xs font-semibold text-slate-600 mb-2">Álbuns</h4>
-                <div>
-                  <div v-if="loadingAlbums" class="text-sm text-slate-500 px-3 py-2">Carregando álbuns...</div>
-                  <div v-else-if="albumsError" class="text-sm text-red-600 px-3 py-2">{{ albumsError }}</div>
-                  <div v-else>
-                    <a v-for="album in albums" :key="album.id" href="#/" class="block px-3 py-2 rounded hover:bg-slate-50 text-sm" @click.prevent="selectAlbum(album.id)">
-                      {{ album.title }}
-                    </a>
-                    <div v-if="albums.length === 0" class="text-sm text-slate-500 px-3 py-2">Nenhum álbum</div>
-                  </div>
+              <div>
+                <div v-if="loadingAlbums" class="text-sm text-slate-500 px-3 py-2">Carregando álbuns...</div>
+                <div v-else-if="albumsError" class="text-sm text-red-600 px-3 py-2">{{ albumsError }}</div>
+                <div v-else>
+                  <a v-for="album in albums" :key="album.id" href="#/"
+                    class="block px-3 py-2 rounded hover:bg-slate-50 text-sm" @click.prevent="selectAlbum(album.id)">
+                    {{ album.title }}
+                  </a>
+                  <div v-if="albums.length === 0" class="text-sm text-slate-500 px-3 py-2">Nenhum álbum</div>
                 </div>
+              </div>
             </div>
           </nav>
         </div>
@@ -40,28 +44,71 @@
       <main class="flex-1 p-6">
         <div class="mx-auto">
           <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 mb-4">{{ currentTitle }}</h1>
-            <div>
-              <div class="mb-4 text-sm text-slate-600">Mostrando fotos para: <strong>{{ currentTitle }}</strong></div>
+          <div>
+            <div class="mb-4 text-sm text-slate-600">Mostrando fotos para: <strong>{{ currentTitle }}</strong></div>
 
-              <div v-if="loadingPhotos" class="text-sm text-slate-500">Carregando fotos...</div>
-              <div v-else-if="photosError" class="text-sm text-red-600">{{ photosError }}</div>
-              <div v-else>
-                <div v-if="photos.length === 0" class="text-sm text-slate-500">Nenhuma foto</div>
+            <div v-if="loadingPhotos" class="text-sm text-slate-500">Carregando fotos...</div>
+            <div v-else-if="photosError" class="text-sm text-red-600">{{ photosError }}</div>
+            <div v-else>
+              <div v-if="photos.length === 0" class="text-sm text-slate-500">Nenhuma foto</div>
 
-                <div v-else class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div v-for="p in photos" :key="p.id" class="bg-white rounded shadow overflow-hidden">
-                    <div class="h-40 bg-slate-100 flex items-center justify-center">
-                      <img v-if="p.url" :src="p.url" alt="" class="object-cover w-full h-full" />
-                      <div v-else class="text-sm text-slate-500">{{ p.title || 'Sem título' }}</div>
-                    </div>
-                    <div class="p-2 text-sm">{{ p.title || 'Sem título' }}</div>
+              <div v-else class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div v-for="p in photos" :key="p.id" class="bg-white rounded shadow overflow-hidden">
+                  <div class="h-40 bg-slate-100 flex items-center justify-center">
+                    <img v-if="p.url" :src="p.url" alt="" class="object-cover w-full h-full" />
+                    <div v-else class="text-sm text-slate-500">{{ p.title || 'Sem título' }}</div>
                   </div>
+                  <div class="p-2 text-sm">{{ p.title || 'Sem título' }}</div>
                 </div>
               </div>
             </div>
+          </div>
         </div>
       </main>
-      
+
+      <!-- Upload Photo Modal -->
+      <div v-if="showUploadModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div class="w-full max-w-lg bg-white rounded shadow p-6">
+          <h3 class="text-lg font-semibold mb-2">Adicionar foto</h3>
+          <p class="text-sm text-slate-600 mb-4">Escolha o arquivo e o álbum ao qual a foto pertence.</p>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-sm mb-1">Título (opcional)</label>
+              <input v-model="uploadTitle" class="w-full border rounded px-3 py-2" placeholder="Ex: Praia" />
+            </div>
+
+            <div>
+              <label class="block text-sm mb-1">Álbum</label>
+              <select v-model="uploadAlbumId" class="w-full border rounded px-3 py-2">
+                <option v-for="a in albums" :key="a.id" :value="a.id">{{ a.title }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm mb-1">Arquivos</label>
+              <input type="file" class="w-full" multiple @change="handleFiles" accept="image/*" />
+              <div v-if="uploadFiles.length" class="mt-2 text-sm text-slate-600">
+                Arquivos selecionados: {{uploadFiles.map(f => f.name).join(', ')}}
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 justify-end">
+              <button class="px-3 py-2 rounded bg-slate-200"
+                @click="() => { showUploadModal = false; uploadFiles = []; uploadError = '' }"
+                :disabled="uploading">Cancelar</button>
+              <button class="px-3 py-2 bg-sky-600 text-white rounded hover:bg-sky-700" @click="uploadPhotos"
+                :disabled="uploading">
+                <span v-if="!uploading">Enviar</span>
+                <span v-else>Enviando...</span>
+              </button>
+            </div>
+
+            <div v-if="uploadError" class="text-sm text-red-600">{{ uploadError }}</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Create Album Modal -->
       <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
         <div class="w-full max-w-md bg-white rounded shadow p-6">
@@ -77,8 +124,10 @@
             <!-- token retirado do localStorage 'pb_token' -->
 
             <div class="flex items-center gap-2 justify-end">
-              <button class="px-3 py-2 rounded bg-slate-200" @click="closeCreateModal" :disabled="creating">Cancelar</button>
-              <button class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700" @click="createAlbum" :disabled="creating">
+              <button class="px-3 py-2 rounded bg-slate-200" @click="closeCreateModal"
+                :disabled="creating">Cancelar</button>
+              <button class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700" @click="createAlbum"
+                :disabled="creating">
                 <span v-if="!creating">Criar álbum</span>
                 <span v-else>Enviando...</span>
               </button>
@@ -111,16 +160,102 @@ const createError = ref('')
 const loadingAlbums = ref(false)
 const albumsError = ref('')
 
+// Upload modal state
+const showUploadModal = ref(false)
+const uploadTitle = ref('')
+const uploadFiles = ref([]) // File[]
+const uploadAlbumId = ref(null)
+const uploading = ref(false)
+const uploadError = ref('')
+
 function onUploadClick() {
-  if (fileInput.value) fileInput.value.click()
+  // require at least one album
+  if (!albums.value || albums.value.length === 0) {
+    createError.value = 'Crie um álbum antes de enviar fotos.'
+    showCreateModal.value = true
+    return
+  }
+
+  // preset selection
+  uploadAlbumId.value = selectedAlbumId.value || (albums.value[0] && albums.value[0].id) || null
+  uploadTitle.value = ''
+  uploadFiles.value = []
+  uploadError.value = ''
+  showUploadModal.value = true
 }
 
 function handleFiles(event) {
   const files = Array.from(event.target.files || [])
-  if (!files.length) return
-  console.log('Arquivos selecionados:', files)
-  // placeholder: implementar upload para a coleção 'photos' depois
-  event.target.value = ''
+  uploadFiles.value = files
+}
+
+async function uploadPhotos() {
+  uploadError.value = ''
+  if (!uploadAlbumId.value) {
+    uploadError.value = 'Selecione um álbum.'
+    return
+  }
+
+  if (!uploadFiles.value || uploadFiles.value.length === 0) {
+    uploadError.value = 'Selecione ao menos um arquivo.'
+    return
+  }
+
+  const storedToken = localStorage.getItem('pb_token')
+  if (!storedToken?.trim()) {
+    uploadError.value = 'pb_token não encontrado no localStorage. Faça login.'
+    return
+  }
+
+  uploading.value = true
+  try {
+    // refresh auth to obtain user id and fresh token
+    const refreshResp = await fetch('/api/collections/users/auth-refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': storedToken.trim() },
+      body: JSON.stringify({})
+    })
+
+    if (!refreshResp.ok) {
+      const txt = await refreshResp.text()
+      throw new Error('auth-refresh failed: ' + txt)
+    }
+
+    const refreshJson = await refreshResp.json()
+    const userId = refreshJson?.record?.id
+    const newToken = refreshJson?.token
+    if (!userId) throw new Error('Não foi possível obter o id do usuário do auth-refresh')
+
+    // create one photo record per file
+    for (const file of uploadFiles.value) {
+      const formData = new FormData()
+      formData.append('title', uploadTitle.value?.trim() || file.name)
+      // albums relation expects array; send JSON string
+      formData.append('albums_id', JSON.stringify([uploadAlbumId.value]))
+      formData.append('user_id', userId)
+      formData.append('file', file)
+
+      const resp = await fetch('/api/collections/photos/records', {
+        method: 'POST',
+        headers: { 'Authorization': newToken || storedToken.trim() },
+        body: formData
+      })
+
+      if (!resp.ok) {
+        const txt = await resp.text()
+        throw new Error('upload failed: ' + txt)
+      }
+    }
+
+    await loadPhotos()
+    showUploadModal.value = false
+    uploadFiles.value = []
+  } catch (err) {
+    console.error(err)
+    uploadError.value = err?.message || String(err)
+  } finally {
+    uploading.value = false
+  }
 }
 
 function onCreateAlbum() {
@@ -148,11 +283,11 @@ async function createAlbum() {
   creating.value = true
   try {
     // 1) auth-refresh to get user record id and token
-  const refreshResp = await fetch('/api/collections/users/auth-refresh', {
+    const refreshResp = await fetch('/api/collections/users/auth-refresh', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-    'Authorization': storedToken.trim()
+        'Authorization': storedToken.trim()
       },
       body: JSON.stringify({})
     })
@@ -184,8 +319,8 @@ async function createAlbum() {
     }
 
     const created = await createResp.json()
-  // reload albums from server
-  await loadAlbums()
+    // reload albums from server
+    await loadAlbums()
     closeCreateModal()
   } catch (err) {
     console.error(err)
@@ -216,8 +351,8 @@ async function loadPhotos() {
     // build URL, filter by album if selected
     let url = '/api/collections/photos/records'
     if (selectedAlbumId.value) {
-      // use filter param ?filter=(album = "id") - PocketBase filter syntax
-      const f = encodeURIComponent(`albums_id='${selectedAlbumId.value}'`)
+      // use PocketBase 'contains' operator for relation fields: albums_id?='id'
+      const f = encodeURIComponent(`albums_id~'${selectedAlbumId.value}'`)
       url += `?filter=(${f})`
     }
 
@@ -228,7 +363,15 @@ async function loadPhotos() {
     }
 
     const json = await resp.json()
-    photos.value = Array.isArray(json.items) ? json.items.map(i => ({ id: i.id, title: i.title, url: i.file ? i.file : i.url })) : []
+    photos.value = Array.isArray(json.items)
+      ? json.items.map(i => {
+          // PocketBase returns 'file' as stored filename; build the files URL:
+          // /api/files/{collectionId}/{recordId}/{filename}
+          const fileName = i.file || i.files || null
+          const url = fileName ? `/api/files/${i.collectionId}/${i.id}/${encodeURIComponent(fileName)}` : (i.url || null)
+          return { id: i.id, title: i.title, url }
+        })
+      : []
   } catch (err) {
     console.error(err)
     photos.value = []
@@ -294,5 +437,4 @@ async function loadAlbums() {
 // onMounted called above to load albums and photos
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
