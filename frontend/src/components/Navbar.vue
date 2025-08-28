@@ -1,7 +1,7 @@
 
 <template>
   <header class="w-full bg-white border-b border-slate-200/60">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="h-8 w-8 bg-indigo-600 text-white rounded flex items-center justify-center font-bold">A</div>
         <a href="#/" class="text-lg font-semibold text-slate-800">App Vue</a>
