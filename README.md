@@ -26,29 +26,21 @@ docker build -t landing-page-vue-pocketbase .
 ### Executando o contêiner
 
 ```bash
-# Crie um diretório específico para os dados do PocketBase se ele não existir
-mkdir -p ./backend/pb_data
-chmod -R 777 ./backend/pb_data
+# Crie um volume Docker para persistir os dados do PocketBase
+docker volume create pocketbase_data
 
-# Execute o contêiner com permissões adequadas
+# Execute o contêiner usando o volume Docker
 docker run -p 8090:8090 \
-  -v $(pwd)/backend/pb_data:/pocketbase/pb_data:rw \
-  --memory=512m \
-  --memory-swap=1g \
+  -v pocketbase_data:/pocketbase/pb_data \
   landing-page-vue-pocketbase
 ```
 
-Se o comando acima não funcionar, tente esta versão alternativa:
+Se o comando acima não funcionar, tente esta versão alternativa com configurações adicionais:
 
 ```bash
 # Comando alternativo com usuário root e configurações adicionais
 docker run -p 8090:8090 \
-  -v $(pwd)/backend/pb_data:/pocketbase/pb_data:rw,z \
-  --user root \
-  --memory=512m \
-  --memory-swap=1g \
-  --shm-size=256m \
-  --cap-add SYS_ADMIN \
+  -v pocketbase_data:/pocketbase/pb_data \
   landing-page-vue-pocketbase
 ```
 
@@ -58,45 +50,35 @@ A aplicação estará disponível em:
 
 ### Notas importantes
 
-- O volume `-v $(pwd)/backend/pb_data:/pocketbase/pb_data:rw` é usado para persistir os dados do PocketBase no host, com a flag `:rw` garantindo permissões de leitura e escrita
+- O volume nomeado `pocketbase_data` é usado para persistir os dados do PocketBase entre reinicializações do contêiner
 - A porta padrão do PocketBase é 8090, mas pode ser alterada usando a variável de ambiente `PB_PORT`
-- As opções `--memory=512m` e `--memory-swap=1g` ajudam a evitar problemas de memória com o SQLite
-- Se você ainda encontrar problemas, tente iniciar com um banco de dados limpo removendo os arquivos em `./backend/pb_data` (faça backup antes!)
+- Para fazer backup dos dados, você pode usar `docker volume inspect pocketbase_data` para encontrar o caminho do volume no host
 
-### Solução de problemas
+### Gerenciando os dados
 
-Se você encontrar o erro "unable to open database file: out of memory (14)", tente as seguintes soluções:
+Para fazer backup dos dados do volume Docker:
 
-1. Certifique-se de que o diretório `backend/pb_data` tem permissões adequadas:
-   ```bash
-   chmod -R 777 ./backend/pb_data
-   ```
+```bash
+# Encontre o caminho do volume no sistema de arquivos do host
+docker volume inspect pocketbase_data
 
-2. Inicie com um banco de dados limpo (faça backup primeiro!):
-   ```bash
-   mv ./backend/pb_data ./backend/pb_data_backup
-   mkdir -p ./backend/pb_data
-   chmod 777 ./backend/pb_data
-   ```
+# Crie um contêiner temporário para fazer backup do volume
+docker run --rm -v pocketbase_data:/source -v $(pwd):/backup alpine tar -czf /backup/pocketbase_backup.tar.gz -C /source .
+```
 
-3. Execute o Docker com usuário root e permissões explícitas para o volume:
-   ```bash
-   docker run -p 8090:8090 \
-     -v $(pwd)/backend/pb_data:/pocketbase/pb_data:rw,z \
-     --user root \
-     landing-page-vue-pocketbase
-   ```
+Para restaurar um backup:
 
-4. Limpe todos os contêineres e imagens Docker anteriores:
-   ```bash
-   docker stop $(docker ps -aq)
-   docker rm $(docker ps -aq)
-   docker system prune -af
-   docker build -t landing-page-vue-pocketbase .
-   ```
+```bash
+# Crie ou recrie o volume (se necessário)
+docker volume create pocketbase_data
 
-5. Tente usar o Docker com menos camadas de virtualização:
-   ```bash
-   # Se estiver usando WSL no Windows, execute diretamente no Windows
-   # Se estiver usando uma VM, tente diretamente no host
-   ```
+# Crie um contêiner temporário para restaurar o backup
+docker run --rm -v pocketbase_data:/target -v $(pwd):/backup alpine sh -c "rm -rf /target/* && tar -xzf /backup/pocketbase_backup.tar.gz -C /target"
+```
+
+Para examinar os dados no volume:
+
+```bash
+# Inicie um shell em um contêiner temporário montando o volume
+docker run -it --rm -v pocketbase_data:/data alpine sh
+```
