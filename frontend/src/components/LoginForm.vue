@@ -56,7 +56,13 @@ async function submit(e) {
 
 <template>
   <div class="min-h-screen flex items-center justify-center px-6">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/50 p-8">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/50 p-8 relative">
+      <a href="/" class="absolute left-4 top-4 text-sm text-indigo-600 hover:underline flex items-center" aria-label="Voltar para a página inicial">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Landing page inicial</span>
+      </a>
       <div class="text-center mb-6">
         <h2 class="text-2xl font-bold text-slate-800">Login</h2>
         <p class="text-sm text-slate-500 mt-1">email: usuario@teste.com.br | senha:user1234</p>
