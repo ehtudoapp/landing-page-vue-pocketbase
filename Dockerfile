@@ -1,18 +1,6 @@
 ARG BUILD_DIR=/tmp/pb_build
-ARG FRONTEND_DIR=/tmp/frontend_build
 
-# Build stage para o frontend
-FROM node:18-alpine AS frontend-builder
-WORKDIR /app
-
-# Copie os arquivos de configuração do frontend
-COPY ./frontend/package.json ./frontend/package-lock.json* ./
-RUN npm ci
-
-# Copie o código-fonte do frontend
-COPY ./frontend .
-# Build do frontend (isso vai usar as configurações do vite.config.js)
-RUN npm run build
+# Vamos pular o build do frontend e apenas usar os arquivos já buildados
 
 # Build stage para o PocketBase
 FROM alpine:3.22 AS pocketbase-base
@@ -54,27 +42,34 @@ RUN addgroup -g ${GID} ${GROUP} \
     && adduser -u ${UID} -G ${GROUP} -s /bin/sh -D ${USER} \
     && mkdir -p "${PB_HOME}" \
     && mkdir -p -m 777 "${PB_WORKDIR}" \
-    && chown ${USER}:${GROUP} "${PB_WORKDIR}"
+    && mkdir -p -m 777 "${PB_WORKDIR}/pb_data" \
+    && chown -R ${USER}:${GROUP} "${PB_WORKDIR}"
 
 # copy the pocketbase executable from build stage
 COPY --from=pocketbase-build /tmp/pb_build/pocketbase ${PB_HOME}/pocketbase
 RUN chmod 755 "${PB_HOME}/pocketbase" \
     && ln -s "${PB_HOME}/pocketbase" /usr/local/bin/pocketbase
 
-# Copie o build do frontend para a pasta pb_public do PocketBase
-# Note: O Vite já configura a saída para o caminho correto em ../backend/pb_public/app
-# mas no contexto do Docker precisamos copiar explicitamente
-COPY --from=frontend-builder /app/dist/ ${PB_WORKDIR}/pb_public/
+# Copie todo o conteúdo do backend, incluindo os arquivos estáticos já buildados
+COPY ./backend/pb_public/ ${PB_WORKDIR}/pb_public/
 
 # Cria o diretório para hooks (se necessário)
 RUN mkdir -p ${PB_WORKDIR}/pb_hooks/
 
-# Copie arquivos específicos do PocketBase se existirem (opcional)
-# Nota: O Dockerfile não suporta facilmente a verificação condicional de existência de arquivos
-# Você pode comentar esta linha se o diretório pb_hooks não existir
+# Cria o diretório para migrações (se necessário)
+RUN mkdir -p ${PB_WORKDIR}/pb_migrations/
+
+# Copie outros diretórios específicos do PocketBase se existirem
+# Nota: Se o diretório pb_hooks não existir, você pode comentar esta linha
 COPY ./backend/pb_hooks/ ${PB_WORKDIR}/pb_hooks/
+
+COPY ./backend/pb_migrations/ ${PB_WORKDIR}/pb_migrations/
+
+# Copie o script de inicialização
+COPY ./backend/entrypoint.sh ${PB_HOME}/entrypoint.sh
+RUN chmod +x ${PB_HOME}/entrypoint.sh
 
 USER ${USER}
 WORKDIR "${PB_WORKDIR}"
 
-CMD ["pocketbase", "serve", "--http=0.0.0.0:8090"]
+CMD ["sh", "-c", "${PB_HOME}/entrypoint.sh"]
