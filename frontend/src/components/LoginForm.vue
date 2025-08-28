@@ -1,13 +1,17 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-const email = ref('')
-const password = ref('')
+// manter valores digitados usando localStorage para facilitar testes
+const email = ref(localStorage.getItem('login_email') || 'usuario@teste.com.br')
+const password = ref(localStorage.getItem('login_password') || 'user1234')
 const error = ref('')
 const loading = ref(false)
 
 const router = useRouter()
+
+watch(email, (v) => localStorage.setItem('login_email', v))
+watch(password, (v) => localStorage.setItem('login_password', v))
 
 function validate() {
   if (!email.value) return 'Email é obrigatório.'
@@ -61,12 +65,12 @@ async function submit(e) {
       <form @submit="submit" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-          <input value="usuario@teste.com.br" v-model="email" type="email" autocomplete="email" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="usuario@teste.com.br" />
+          <input v-model="email" type="email" autocomplete="email" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="usuario@teste.com.br" />
         </div>
 
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
-          <input value="user1234" v-model="password" type="password" autocomplete="current-password" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="user1234" />
+          <input v-model="password" type="password" autocomplete="current-password" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="user1234" />
         </div>
 
         <div>

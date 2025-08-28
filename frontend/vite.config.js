@@ -12,6 +12,16 @@ export default defineConfig({
     vueDevTools(),
   ],
   base: '/app/',
+  server: {
+    // Proxy todas as chamadas que começam com /api para o PocketBase em localhost:8090
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8090',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   build: {
     outDir: path.resolve(__dirname, '../backend/pb_public/app'),
     assetsDir: 'assets',

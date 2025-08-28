@@ -1,9 +1,10 @@
 <script setup>
-import Login from './pages/Login.vue'
+// O roteador é registrado em `main.js`; aqui apenas renderizamos a rota ativa
 </script>
 
 <template>
-  <Login />
+  <router-view />
 </template>
 
-<style></style>
+<style>
+</style>
