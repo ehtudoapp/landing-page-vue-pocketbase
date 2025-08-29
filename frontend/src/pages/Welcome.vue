@@ -30,11 +30,15 @@
             <!-- FAB móvel fixo no canto inferior direito da área principal -->
             <div ref="fabRef" class="md:hidden fixed right-6 bottom-12 z-40 flex flex-col items-end">
               <transition name="fade-scale">
-                <button v-if="showFab" @click="() => { onCreateAlbum(); closeFab() }" class="mb-2 w-12 h-12 flex items-center justify-center rounded-full bg-green-600 text-white shadow text-xs">album</button>
+                <button v-if="showFab" @click="() => { onCreateAlbum(); closeFab() }" class="mb-2 flex items-center gap-3 px-3 py-2 rounded bg-green-600 text-white shadow">
+                  <span class="font-medium">Criar álbum</span>
+                </button>
               </transition>
 
               <transition name="fade-scale">
-                <button v-if="showFab" @click="() => { onUploadClick(); closeFab() }" class="mb-2 w-12 h-12 flex items-center justify-center rounded-full bg-sky-600 text-white shadow text-xs">foto</button>
+                <button v-if="showFab" @click="() => { onUploadClick(); closeFab() }" class="mb-2 flex items-center gap-3 px-3 py-2 rounded bg-sky-600 text-white shadow">
+                  <span class="font-medium">Enviar foto</span>
+                </button>
               </transition>
 
               <button @click="toggleFab" aria-label="Adicionar" class="w-14 h-14 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg text-2xl">+</button>
