@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <Navbar />
+  <Navbar @toggle-drawer="showSidebarDrawer = true" />
+
 
     <div class="flex flex-1">
       <!-- Sidebar (desktop) - agora componente reutilizável -->
@@ -8,8 +9,10 @@
         <Sidebar
           @create-album="onCreateAlbum"
           @upload-click="onUploadClick"
+          :userEmail="userEmail"
           @select-all="selectAllPhotos"
           @select-album="selectAlbum"
+          @logout="handleLogout"
         />
       </div>
 
@@ -24,6 +27,22 @@
             :photos="photos" 
             :loading="loadingPhotos" 
             :error="photosError" />
+            <!-- FAB móvel fixo no canto inferior direito da área principal -->
+            <div ref="fabRef" class="md:hidden fixed right-6 bottom-12 z-40 flex flex-col items-end">
+              <transition name="fade-scale">
+                <button v-if="showFab" @click="() => { onCreateAlbum(); closeFab() }" class="mb-2 flex items-center gap-3 px-3 py-2 rounded bg-green-600 text-white shadow">
+                  <span class="font-medium">Criar álbum</span>
+                </button>
+              </transition>
+
+              <transition name="fade-scale">
+                <button v-if="showFab" @click="() => { onUploadClick(); closeFab() }" class="mb-2 flex items-center gap-3 px-3 py-2 rounded bg-sky-600 text-white shadow">
+                  <span class="font-medium">Enviar foto</span>
+                </button>
+              </transition>
+
+              <button @click="toggleFab" aria-label="Adicionar" class="w-14 h-14 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg text-2xl">+</button>
+            </div>
           </div>
         </div>
       </main>
@@ -55,11 +74,46 @@
         @update:title="val => albumTitle = val"
       />
     </div>
+
+  <!-- FAB móvel: agora posicionado dentro do main (photo grid) -->
+
+  <!-- Drawer / Overlay (mobile) - sempre renderizado para permitir transições -->
+  <div class="fixed inset-0 z-50 md:hidden" :class="showSidebarDrawer ? 'pointer-events-auto' : 'pointer-events-none'">
+      <!-- overlay (fade) -->
+      <div
+        class="absolute inset-0 bg-black/50 transition-opacity duration-300"
+        :class="showSidebarDrawer ? 'opacity-100' : 'opacity-0'
+        "
+        @click="showSidebarDrawer = false"
+      ></div>
+
+      <!-- drawer panel (slide from right) -->
+      <aside
+        class="absolute right-0 top-0 bottom-0 w-80 max-w-full bg-white shadow-xl transform transition-transform duration-300"
+        :class="showSidebarDrawer ? 'translate-x-0' : 'translate-x-full'"
+      >
+        <div class="p-4 flex items-center justify-between border-b">
+          <h3 class="font-semibold">Menu</h3>
+          <button @click="showSidebarDrawer = false" aria-label="Fechar" class="px-2 py-1 rounded bg-gray-100"> X </button>
+        </div>
+
+        <div class="p-2 overflow-auto h-[calc(100%-56px)]">
+          <Sidebar
+            :userEmail="userEmail"
+            @create-album="() => { onCreateAlbum(); showSidebarDrawer = false }"
+            @upload-click="() => { onUploadClick(); showSidebarDrawer = false }"
+            @select-all="() => { selectAllPhotos(); showSidebarDrawer = false }"
+            @select-album="id => { selectAlbum(id); showSidebarDrawer = false }"
+            @logout="() => { handleLogout(); showSidebarDrawer = false }"
+          />
+        </div>
+      </aside>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import PhotoGrid from '@/components/PhotoGrid.vue'
@@ -69,8 +123,20 @@ import { useAuth } from '@/composables/useAuth'
 import { postForm } from '@/services/api'
 import UploadModal from '@/components/UploadModal.vue'
 import CreateAlbumModal from '@/components/CreateAlbumModal.vue'
+import { useRouter } from 'vue-router'
 
 const fileInput = ref(null)
+
+// user email (passado para Sidebar)
+const userEmail = ref('')
+
+// preencher userEmail lendo pb_user localStorage (similar ao Navbar)
+try {
+  const raw = localStorage.getItem('pb_user')
+  if (raw) userEmail.value = JSON.parse(raw)?.email || ''
+} catch (e) {
+  console.error('Erro ao ler pb_user em Welcome.vue', e)
+}
 
 // albums providos pelo composable (singleton)
 const { albums, loading: loadingAlbums, error: albumsError, loadAlbums, createAlbum: createAlbumComposable } = useAlbums()
@@ -94,6 +160,24 @@ const uploadFiles = ref([]) // File[]
 const uploadAlbumId = ref(null)
 const uploading = ref(false)
 const uploadError = ref('')
+
+// drawer state (mobile)
+const showSidebarDrawer = ref(false)
+
+const router = useRouter()
+
+function handleLogout() {
+  localStorage.removeItem('pb_token')
+  localStorage.removeItem('pb_user')
+  showSidebarDrawer.value = false
+  router.replace({ path: '/login' })
+}
+
+// FAB state (mobile) - botão circular fixo no canto inferior direito
+const showFab = ref(false)
+const fabRef = ref(null)
+function toggleFab() { showFab.value = !showFab.value }
+function closeFab() { showFab.value = false }
 
 function onUploadClick() {
   // require at least one album
@@ -154,7 +238,7 @@ async function uploadPhotos() {
 
   // force reload to bypass cache and show newly uploaded photos
   await loadPhotos(selectedAlbumId.value, true)
-    showUploadModal.value = false
+  showUploadModal.value = false
     uploadFiles.value = []
   } catch (err) {
     console.error(err)
@@ -166,6 +250,7 @@ async function uploadPhotos() {
 
 function onCreateAlbum() {
   showCreateModal.value = true
+  showSidebarDrawer.value = false
 }
 
 function closeCreateModal() {
@@ -201,6 +286,7 @@ function selectAllPhotos() {
   selectedAlbumId.value = null
   currentTitle.value = 'Todas as fotos'
   loadPhotos(null)
+  showSidebarDrawer.value = false
 }
 
 function selectAlbum(id) {
@@ -209,11 +295,37 @@ function selectAlbum(id) {
   const title = a?.title || 'Álbum'
   currentTitle.value = title
   loadPhotos(id)
+  showSidebarDrawer.value = false
 }
+let _removeKeydown = () => {}
+let _removeClick = () => {}
 
 onMounted(() => {
   loadAlbums()
   loadPhotos(null)
+
+  // fechar drawer com Esc
+  const onKeydown = (e) => {
+    if (e.key === 'Escape') {
+      showSidebarDrawer.value = false
+      showFab.value = false
+    }
+  }
+  window.addEventListener('keydown', onKeydown)
+  _removeKeydown = () => window.removeEventListener('keydown', onKeydown)
+
+  // fechar FAB ao clicar fora
+  const onDocumentClick = (ev) => {
+    if (!fabRef.value) return
+    if (!fabRef.value.contains(ev.target)) showFab.value = false
+  }
+  window.addEventListener('click', onDocumentClick)
+  _removeClick = () => window.removeEventListener('click', onDocumentClick)
+})
+
+onBeforeUnmount(() => {
+  _removeKeydown()
+  if (typeof _removeClick === 'function') _removeClick()
 })
 // onMounted called above to load albums and photos
 </script>
