@@ -8,7 +8,7 @@
       </div>
 
       <div class="flex items-center gap-4">
-        <div v-if="userEmail" class="flex items-center gap-3">
+  <div v-if="userEmail" class="hidden md:flex items-center gap-3">
           <span class="text-sm text-slate-600">{{ userEmail }}</span>
           <button @click="logout" class="text-sm px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700">Sair</button>
         </div>

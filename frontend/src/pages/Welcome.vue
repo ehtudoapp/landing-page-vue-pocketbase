@@ -9,8 +9,10 @@
         <Sidebar
           @create-album="onCreateAlbum"
           @upload-click="onUploadClick"
+          :userEmail="userEmail"
           @select-all="selectAllPhotos"
           @select-album="selectAlbum"
+          @logout="handleLogout"
         />
       </div>
 
@@ -93,10 +95,12 @@
 
         <div class="p-2 overflow-auto h-[calc(100%-56px)]">
           <Sidebar
+            :userEmail="userEmail"
             @create-album="() => { onCreateAlbum(); showSidebarDrawer = false }"
             @upload-click="() => { onUploadClick(); showSidebarDrawer = false }"
             @select-all="() => { selectAllPhotos(); showSidebarDrawer = false }"
             @select-album="id => { selectAlbum(id); showSidebarDrawer = false }"
+            @logout="() => { handleLogout(); showSidebarDrawer = false }"
           />
         </div>
       </aside>
@@ -115,8 +119,20 @@ import { useAuth } from '@/composables/useAuth'
 import { postForm } from '@/services/api'
 import UploadModal from '@/components/UploadModal.vue'
 import CreateAlbumModal from '@/components/CreateAlbumModal.vue'
+import { useRouter } from 'vue-router'
 
 const fileInput = ref(null)
+
+// user email (passado para Sidebar)
+const userEmail = ref('')
+
+// preencher userEmail lendo pb_user localStorage (similar ao Navbar)
+try {
+  const raw = localStorage.getItem('pb_user')
+  if (raw) userEmail.value = JSON.parse(raw)?.email || ''
+} catch (e) {
+  console.error('Erro ao ler pb_user em Welcome.vue', e)
+}
 
 // albums providos pelo composable (singleton)
 const { albums, loading: loadingAlbums, error: albumsError, loadAlbums, createAlbum: createAlbumComposable } = useAlbums()
@@ -143,6 +159,15 @@ const uploadError = ref('')
 
 // drawer state (mobile)
 const showSidebarDrawer = ref(false)
+
+const router = useRouter()
+
+function handleLogout() {
+  localStorage.removeItem('pb_token')
+  localStorage.removeItem('pb_user')
+  showSidebarDrawer.value = false
+  router.replace({ path: '/login' })
+}
 
 // FAB state (mobile) - botão circular fixo no canto inferior direito
 const showFab = ref(false)
