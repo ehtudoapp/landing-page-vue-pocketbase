@@ -6,9 +6,6 @@
       <!-- Sidebar (desktop) - agora componente reutilizável -->
       <div class="hidden md:block">
         <Sidebar
-          :albums="albums"
-          :loading="loadingAlbums"
-          :error="albumsError"
           @create-album="onCreateAlbum"
           @upload-click="onUploadClick"
           @select-all="selectAllPhotos"
@@ -23,21 +20,10 @@
           <div>
             <div class="mb-4 text-sm text-slate-600">Mostrando fotos para: <strong>{{ currentTitle }}</strong></div>
 
-            <div v-if="loadingPhotos" class="text-sm text-slate-500">Carregando fotos...</div>
-            <div v-else-if="photosError" class="text-sm text-red-600">{{ photosError }}</div>
-            <div v-else>
-              <div v-if="photos.length === 0" class="text-sm text-slate-500">Nenhuma foto</div>
-
-              <div v-else class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div v-for="p in photos" :key="p.id" class="bg-white rounded shadow overflow-hidden">
-                  <div class="h-40 bg-slate-100 flex items-center justify-center">
-                    <img v-if="p.url" :src="p.url" alt="" class="object-cover w-full h-full" />
-                    <div v-else class="text-sm text-slate-500">{{ p.title || 'Sem título' }}</div>
-                  </div>
-                  <div class="p-2 text-sm">{{ p.title || 'Sem título' }}</div>
-                </div>
-              </div>
-            </div>
+            <PhotoGrid 
+            :photos="photos" 
+            :loading="loadingPhotos" 
+            :error="photosError" />
           </div>
         </div>
       </main>
@@ -76,6 +62,7 @@
 import { ref, onMounted } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
+import PhotoGrid from '@/components/PhotoGrid.vue'
 import { useAlbums } from '@/composables/useAlbums'
 import { usePhotos } from '@/composables/usePhotos'
 import { useAuth } from '@/composables/useAuth'
@@ -85,7 +72,7 @@ import CreateAlbumModal from '@/components/CreateAlbumModal.vue'
 
 const fileInput = ref(null)
 
-// albums providos pelo composable
+// albums providos pelo composable (singleton)
 const { albums, loading: loadingAlbums, error: albumsError, loadAlbums, createAlbum: createAlbumComposable } = useAlbums()
 
 // photos via composable
@@ -165,7 +152,8 @@ async function uploadPhotos() {
       await postForm('/api/collections/photos/records', formData, { headers: { Authorization: token } })
     }
 
-    await loadPhotos(selectedAlbumId.value)
+  // force reload to bypass cache and show newly uploaded photos
+  await loadPhotos(selectedAlbumId.value, true)
     showUploadModal.value = false
     uploadFiles.value = []
   } catch (err) {

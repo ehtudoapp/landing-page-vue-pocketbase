@@ -26,12 +26,14 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { onMounted } from 'vue'
+import { useAlbums } from '@/composables/useAlbums'
 
-defineProps({
-  albums: { type: Array, default: () => [] },
-  loading: { type: Boolean, default: false },
-  error: { type: String, default: '' }
+const { albums, loading, error, loadAlbums } = useAlbums()
+
+onMounted(() => {
+  // safe to call - singleton prevents duplicate requests
+  loadAlbums()
 })
 </script>
 
