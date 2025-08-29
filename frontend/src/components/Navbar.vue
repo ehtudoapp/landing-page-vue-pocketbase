@@ -14,6 +14,11 @@
         </div>
 
         <a v-else href="#/login" class="text-sm text-slate-700 hover:text-indigo-600">Entrar</a>
+
+        <!-- botão menu mobile (lado direito) -->
+        <button @click="emit('toggle-drawer')" class="md:hidden ml-2 px-2 py-1 rounded bg-gray-100" aria-label="Abrir menu">
+          ☰
+        </button>
       </div>
     </div>
   </header>
@@ -21,6 +26,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+const emit = defineEmits(['toggle-drawer'])
 import { useRouter } from 'vue-router'
 
 const userEmail = ref('')

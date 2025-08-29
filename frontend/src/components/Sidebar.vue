@@ -1,7 +1,8 @@
 <template>
   <aside class="w-full md:w-64 bg-white border-r border-slate-200/50 p-4">
     <div class="space-y-4">
-      <div class="flex flex-col gap-2">
+      <!-- botões visíveis apenas em desktop/tablet -->
+      <div class="hidden md:flex flex-col gap-2">
         <button @click="$emit('create-album')" class="px-3 py-2 bg-green-600 text-white rounded text-sm">+ álbum</button>
         <button @click="$emit('upload-click')" class="px-3 py-2 bg-sky-600 text-white rounded text-sm">+ upload fotos</button>
       </div>
@@ -37,6 +38,4 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* estilos locais se necessário */
-</style>
+<style scoped></style>

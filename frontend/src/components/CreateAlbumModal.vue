@@ -1,5 +1,5 @@
 <template>
-  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+  <div v-if="show" class="px-2 fixed inset-0 z-50 flex items-center justify-center bg-black/40">
     <div class="w-full max-w-md bg-white rounded shadow p-6">
       <h3 class="text-lg font-semibold mb-2">Criar álbum</h3>
       <p class="text-sm text-slate-600 mb-4">Informe o título do álbum.</p>
